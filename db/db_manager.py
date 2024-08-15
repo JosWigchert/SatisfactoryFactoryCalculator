@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Dict
 from db.models import Item, Machine, Recipe
 import sqlite3
 
@@ -101,6 +101,99 @@ class DBManager:
             """,
                 (recipe_id, input_item_id, quantity),
             )
+
+        self.conn.commit()
+
+    def update_item(self, item: Item):
+        cursor = self.conn.cursor()
+        cursor.execute(
+            """
+        UPDATE items SET name = ? WHERE id = ?
+        """,
+            (item.name, item.id),
+        )
+        self.conn.commit()
+
+    def update_machine(self, machine: Machine):
+        cursor = self.conn.cursor()
+        cursor.execute(
+            """
+        UPDATE machines SET name = ? WHERE id = ?
+        """,
+            (machine.name, machine.id),
+        )
+        self.conn.commit()
+
+    def update_recipe(self, recipe: Recipe):
+        cursor = self.conn.cursor()
+
+        # Update the recipe's main details
+        cursor.execute(
+            """
+        UPDATE recipes SET item_id = ?, machine_id = ?, output_amount = ? WHERE id = ?
+        """,
+            (recipe.item.id, recipe.machine.id, recipe.output_amount, recipe.id),
+        )
+
+        # Remove existing ingredients
+        cursor.execute(
+            """
+        DELETE FROM recipe_ingredients WHERE recipe_id = ?
+        """,
+            (recipe.id,),
+        )
+
+        # Insert updated ingredients
+        for input_item, quantity in recipe.inputs.items():
+            input_item_id = self.add_item(input_item)
+            cursor.execute(
+                """
+            INSERT INTO recipe_ingredients (recipe_id, item_id, quantity)
+            VALUES (?, ?, ?)
+            """,
+                (recipe.id, input_item_id, quantity),
+            )
+
+        self.conn.commit()
+
+    def delete_item(self, item_id: int):
+        cursor = self.conn.cursor()
+        cursor.execute(
+            """
+        DELETE FROM items WHERE id = ?
+        """,
+            (item_id,),
+        )
+        self.conn.commit()
+
+    def delete_machine(self, machine_id: int):
+        cursor = self.conn.cursor()
+        cursor.execute(
+            """
+        DELETE FROM machines WHERE id = ?
+        """,
+            (machine_id,),
+        )
+        self.conn.commit()
+
+    def delete_recipe(self, recipe_id: int):
+        cursor = self.conn.cursor()
+
+        # Delete ingredients associated with the recipe
+        cursor.execute(
+            """
+        DELETE FROM recipe_ingredients WHERE recipe_id = ?
+        """,
+            (recipe_id,),
+        )
+
+        # Delete the recipe itself
+        cursor.execute(
+            """
+        DELETE FROM recipes WHERE id = ?
+        """,
+            (recipe_id,),
+        )
 
         self.conn.commit()
 

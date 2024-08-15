@@ -1,23 +1,23 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import List, Dict, Optional
 
 
 @dataclass
 class Item:
-    id: Optional[int]
     name: str
+    id: Optional[int] = None
 
 
 @dataclass
 class Machine:
-    id: Optional[int]
     name: str
+    id: Optional[int] = None
 
 
 @dataclass
 class Recipe:
-    id: Optional[int]
     item: Item
     output_amount: int
     machine: Machine
     inputs: Dict[Item, int]
+    id: Optional[int] = None
